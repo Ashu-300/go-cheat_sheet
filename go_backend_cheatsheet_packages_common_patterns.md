@@ -146,23 +146,47 @@ http.SetCookie(w, &http.Cookie{
 package utils
 
 import (
+	"auth/src/dto"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
-
-func GenerateToken(userID string, role string) (string, error) {
-	claims := jwt.MapClaims{
-		"user_id": userID,
-		"role": role,
-		"exp": time.Now().Add(24 * time.Hour).Unix(),
+func GenerateToken(userId string , email string , role string ) (string , string , error) {
+	accessSecret := os.Getenv("JWT_ACCESS_SECRET")
+	accessClaim := dto.AccessClaim{
+		ID: userId,
+		Email: email,
+		Role: role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+    		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256 , accessClaim)
+	signedAccessToken , err := accessToken.SignedString([]byte(accessSecret))
+	if err != nil {
+		return "", "" , err
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	refreshSecret := os.Getenv("JWT_REFRESH_SECRET")
+	refreshClaim := dto.RefreshClaim{
+		ID: userId,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(7 * 24 * time.Hour)),
+    		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256 , refreshClaim)
+	signedRefreshToken , err := refreshToken.SignedString([]byte(refreshSecret))
+	if err != nil {
+		return "" , "" , err
+	}
+
+
+	return signedAccessToken , signedRefreshToken , nil
 }
 
 func ValidateToken(tokenString string) (*dto.AccessClaim, error) {
@@ -196,6 +220,7 @@ func ValidateToken(tokenString string) (*dto.AccessClaim, error) {
 
 	return &claim, nil
 }
+
 ```
 
 ---
