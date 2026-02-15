@@ -1,55 +1,67 @@
-# Go Backend Cheatsheet
+Here is your **complete, clean, production-ready Go Backend Cheatsheet Markdown file** with the `main.go` section correctly placed after routes 👇
+
+You can **copy-paste this entire file directly into `README.md` or `go-backend-cheatsheet.md`**.
+
+---
+
+# 🚀 Go Backend Cheatsheet
 
 A **practical Markdown reference** of the **most-used Go backend packages** and **common production-ready code patterns**.
 
 This file is ideal for:
-- Backend interviews
-- New Go projects
-- Copy‑paste starter utilities
-- Giving to Copilot / teammates
+
+* Backend interviews
+* New Go projects
+* Copy-paste starter utilities
+* Giving to Copilot / teammates
 
 ---
 
 ## 📦 Most Used Go Packages (Backend)
 
 ### 🔐 Authentication / Security
-| Purpose | Package |
-|------|------|
-| JWT | `github.com/golang-jwt/jwt/v5` |
-| Password hashing | `golang.org/x/crypto/bcrypt` |
+
+| Purpose          | Package                        |
+| ---------------- | ------------------------------ |
+| JWT              | `github.com/golang-jwt/jwt/v5` |
+| Password hashing | `golang.org/x/crypto/bcrypt`   |
 
 ---
 
 ### 🌐 HTTP & Routing
-| Purpose | Package |
-|------|------|
-| HTTP server | `net/http` |
-| Router | `github.com/go-chi/chi/v5` |
-| Middleware | `github.com/go-chi/chi/v5/middleware` |
+
+| Purpose     | Package                               |
+| ----------- | ------------------------------------- |
+| HTTP server | `net/http`                            |
+| Router      | `github.com/go-chi/chi/v5`            |
+| Middleware  | `github.com/go-chi/chi/v5/middleware` |
 
 ---
 
 ### 🗄️ Databases
 
 #### MongoDB
-| Purpose | Package |
-|------|------|
+
+| Purpose      | Package                             |
+| ------------ | ----------------------------------- |
 | Mongo Driver | `go.mongodb.org/mongo-driver/mongo` |
 
 #### PostgreSQL
-| Purpose | Package |
-|------|------|
-| SQL toolkit | `github.com/jmoiron/sqlx` |
-| PG Driver | `github.com/jackc/pgx/v5/stdlib` |
+
+| Purpose     | Package                          |
+| ----------- | -------------------------------- |
+| SQL toolkit | `github.com/jmoiron/sqlx`        |
+| PG Driver   | `github.com/jackc/pgx/v5/stdlib` |
 
 ---
 
 ### ⚙️ Config & Utilities
-| Purpose | Package |
-|------|------|
-| Env variables | `github.com/joho/godotenv` |
-| UUID | `github.com/google/uuid` |
-| Validation | `github.com/go-playground/validator/v10` |
+
+| Purpose       | Package                                  |
+| ------------- | ---------------------------------------- |
+| Env variables | `github.com/joho/godotenv`               |
+| UUID          | `github.com/google/uuid`                 |
+| Validation    | `github.com/go-playground/validator/v10` |
 
 ---
 
@@ -63,6 +75,7 @@ MONGO_URI=mongodb://localhost:27017
 ```
 
 Load env:
+
 ```go
 import "github.com/joho/godotenv"
 
@@ -74,11 +87,13 @@ godotenv.Load()
 ## 📥 Get & Set Headers (Chi / net/http)
 
 ### Get Header
+
 ```go
 auth := r.Header.Get("Authorization")
 ```
 
 ### Set Header
+
 ```go
 w.Header().Set("Content-Type", "application/json")
 w.Header().Set("X-App-Version", "1.0")
@@ -91,11 +106,13 @@ w.Header().Set("X-App-Version", "1.0")
 ## 🔗 URL Params & Query Params (Chi)
 
 ### URL Params
+
 ```go
 id := chi.URLParam(r, "id")
 ```
 
 Route:
+
 ```go
 r.Get("/users/{id}", handler)
 ```
@@ -103,12 +120,14 @@ r.Get("/users/{id}", handler)
 ---
 
 ### Query Params
+
 ```go
 page := r.URL.Query().Get("page")
 limit := r.URL.Query().Get("limit")
 ```
 
 Example:
+
 ```
 GET /users?page=1&limit=10
 ```
@@ -118,6 +137,7 @@ GET /users?page=1&limit=10
 ## 🍪 Cookies (Correct Way)
 
 ### Get Cookie
+
 ```go
 cookie, err := r.Cookie("token")
 if err != nil {
@@ -126,6 +146,7 @@ if err != nil {
 ```
 
 ### Set Cookie
+
 ```go
 http.SetCookie(w, &http.Cookie{
 	Name:     "token",
@@ -142,6 +163,7 @@ http.SetCookie(w, &http.Cookie{
 ## 🔐 JWT Utility (Generate & Verify)
 
 ### jwt.go
+
 ```go
 package utils
 
@@ -185,7 +207,6 @@ func GenerateToken(userId string , email string , role string ) (string , string
 		return "" , "" , err
 	}
 
-
 	return signedAccessToken , signedRefreshToken , nil
 }
 
@@ -197,12 +218,10 @@ func ValidateToken(tokenString string) (*dto.AccessClaim, error) {
 
 	var claim dto.AccessClaim
 
-	// Parse the token into our custom claim struct
 	token, err := jwt.ParseWithClaims(
 		tokenString,
 		&claim,
 		func(t *jwt.Token) (interface{}, error) {
-			// Check if signing method is HS256
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("invalid signing method")
 			}
@@ -211,7 +230,7 @@ func ValidateToken(tokenString string) (*dto.AccessClaim, error) {
 	)
 
 	if err != nil {
-		return nil, err // parsing or validation failed
+		return nil, err
 	}
 
 	if !token.Valid {
@@ -220,7 +239,6 @@ func ValidateToken(tokenString string) (*dto.AccessClaim, error) {
 
 	return &claim, nil
 }
-
 ```
 
 ---
@@ -314,6 +332,64 @@ func SetupAuthRoutes() chi.Router {
 
 ---
 
+## 🚀 Application Entry Point (`main.go`)
+
+```go
+package main
+
+import (
+	"auth/src/db"
+	"auth/src/routes"
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
+	"github.com/joho/godotenv"
+)
+
+func main() {
+	// Load environment variables
+	if err := godotenv.Load(); err != nil {
+		log.Println("⚠️ No .env file found, using system env")
+	}
+
+	// Initialize database
+	db.ConnectDB()
+
+	// Create router
+	router := chi.NewRouter()
+
+	// CORS Middleware
+	router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"*"}, // ⚠️ change in production
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
+
+	// Routes
+	router.Mount("/api/auth", routes.SetupAuthRoutes())
+
+	// Get port
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8001"
+	}
+
+	log.Printf("🚀 Auth service running on http://localhost:%s\n", port)
+
+	if err := http.ListenAndServe(":"+port, router); err != nil {
+		log.Fatal("❌ Server failed:", err)
+	}
+}
+```
+
+---
+
 ## 🗄️ PostgreSQL Connection (sqlx)
 
 ```go
@@ -391,30 +467,22 @@ func MongoInit() {
 
 ## 🧠 Best Practices (Important)
 
-- Use **context** everywhere (`context.Context`)
-- Never parse cookies manually
-- JWT secret must come from env
-- Close DB connections on shutdown
-- Use middleware for auth
+* Use **context** everywhere (`context.Context`)
+* Never parse cookies manually
+* JWT secret must come from env
+* Close DB connections on shutdown
+* Use middleware for auth
 
 ---
 
 ## 🚀 Recommended Next Utilities to Add
 
-- Auth middleware (JWT + context)
-- Graceful shutdown
-- Request validation
-- Central error handler
-- Logging (zap / slog)
+* Auth middleware (JWT + context)
+* Graceful shutdown
+* Request validation
+* Central error handler
+* Logging (zap / slog)
 
 ---
 
-### ✅ This file is production‑ready & interview‑ready.
-If you want:
-- **JWT auth middleware**
-- **Role‑based access control**
-- **Go project folder structure**
-- **Microservices version of this**
-
-Tell me and I’ll extend this doc 👊
 
