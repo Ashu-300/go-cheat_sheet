@@ -332,6 +332,40 @@ func SetupAuthRoutes() chi.Router {
 
 ---
 
+## 🔓 Access Auth Context in Controller (IMPORTANT)
+
+✅ Extract AuthContext in any controller
+
+```go
+package controller
+
+import (
+	"fmt"
+	"net/http"
+
+	"auth/src/middleware"
+)
+
+func Me(w http.ResponseWriter, r *http.Request) {
+
+	// Extract auth context from request
+	auth, ok := r.Context().Value(middleware.AuthKey).(middleware.AuthContext)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Access user data
+	userID := auth.UserID
+	email := auth.Email
+	role := auth.Role
+
+	fmt.Fprintf(w, "UserID: %s\nEmail: %s\nRole: %s", userID, email, role)
+}
+
+```
+
+---
 ## 🚀 Application Entry Point (`main.go`)
 
 ```go
